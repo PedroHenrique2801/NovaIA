@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, jsonify
 import ast
 import operator
 import re
+import random
 
 app = Flask(__name__)
 
@@ -57,7 +58,6 @@ def calcular(expressao):
         def resolver(no):
 
             if isinstance(no, ast.Constant):
-
                 if isinstance(no.value, (int, float)):
                     return no.value
 
@@ -75,6 +75,7 @@ def calcular(expressao):
                 direita = resolver(no.right)
 
                 if type(no.op) in operadores:
+
                     return operadores[type(no.op)](
                         esquerda,
                         direita
@@ -228,7 +229,8 @@ def responder_memoria(texto):
 
             partes.append(
                 "Nosso assunto mais recente é "
-                f"{memoria['assunto']}."
+                + memoria["assunto"]
+                + "."
             )
 
         if not partes:
@@ -297,12 +299,9 @@ def resposta_python(texto):
             "Quando você executa um programa, o Python "
             "interpreta essas instruções e realiza as "
             "ações que você programou.\n\n"
-            "Por exemplo, você pode escrever uma instrução "
-            "para fazer uma conta, guardar uma informação "
-            "ou mostrar uma mensagem na tela.\n\n"
-            "Na NovaIA, o Python recebe a mensagem que você "
-            "envia, analisa as regras do programa e prepara "
-            "uma resposta para mostrar no chat."
+            "Na NovaIA, usamos Python no servidor para "
+            "receber mensagens, processá-las e enviar "
+            "respostas para o chat."
         )
 
 
@@ -321,10 +320,7 @@ def resposta_python(texto):
             "sites, automações, servidores, ferramentas, "
             "jogos e projetos de inteligência artificial.\n\n"
             "Também é muito usado para trabalhar com dados "
-            "e automatizar tarefas.\n\n"
-            "Na NovaIA, usamos Python para fazer a parte "
-            "do servidor que recebe suas mensagens e "
-            "prepara as respostas."
+            "e automatizar tarefas."
         )
 
 
@@ -339,14 +335,12 @@ def resposta_python(texto):
     ):
 
         return (
-            "Com Python dá para criar muitos tipos de projetos! 🐍🚀\n\n"
+            "Com Python dá para criar muitos projetos! 🐍🚀\n\n"
             "Por exemplo: calculadoras, programas, "
             "automações, servidores, ferramentas, jogos "
             "simples e sistemas.\n\n"
             "Python também é muito usado em inteligência "
-            "artificial e análise de dados.\n\n"
-            "A NovaIA é um exemplo de projeto que estamos "
-            "construindo com Python."
+            "artificial e análise de dados."
         )
 
 
@@ -362,18 +356,6 @@ def resposta_python(texto):
             "Com ela podemos criar programas, automações, "
             "servidores, ferramentas e projetos de "
             "inteligência artificial."
-        )
-
-
-    if "exemplo" in texto:
-
-        return (
-            "Um exemplo de programa em Python é uma "
-            "calculadora. 🧮\n\n"
-            "Podemos escrever código para receber números, "
-            "fazer uma conta e mostrar o resultado.\n\n"
-            "Também podemos usar Python para criar "
-            "servidores, ferramentas e sistemas."
         )
 
 
@@ -432,27 +414,6 @@ def resposta_programacao(texto):
 
 def resposta_ia(texto):
 
-    palavras_ia = [
-        "inteligência artificial",
-        "inteligencia artificial",
-        "o que é ia",
-        "o que e ia",
-        "ia"
-    ]
-
-    encontrou = False
-
-    for palavra in palavras_ia:
-
-        if palavra in texto:
-
-            encontrou = True
-            break
-
-    if not encontrou:
-        return None
-
-
     if (
         "o que é inteligência artificial" in texto
         or "o que e inteligencia artificial" in texto
@@ -467,9 +428,9 @@ def resposta_ia(texto):
             "da computação que busca criar sistemas capazes "
             "de realizar tarefas que normalmente exigiriam "
             "algum tipo de inteligência humana. 🤖🧠\n\n"
-            "Dependendo do sistema, uma IA pode analisar "
-            "informações, reconhecer padrões, conversar, "
-            "classificar dados ou gerar conteúdos."
+            "Uma IA pode analisar informações, reconhecer "
+            "padrões, conversar, classificar dados ou gerar "
+            "conteúdos, dependendo do sistema."
         )
 
 
@@ -484,12 +445,9 @@ def resposta_ia(texto):
         return (
             "A inteligência artificial pode ser usada "
             "para muitas tarefas! 🤖\n\n"
-            "Ela pode ajudar a analisar informações, "
-            "reconhecer padrões, responder perguntas, "
-            "ajudar em estudos, automatizar tarefas e "
-            "trabalhar com diferentes tipos de conteúdo.\n\n"
-            "O que uma IA consegue fazer depende do "
-            "modelo e do sistema que foi criado."
+            "Ela pode ajudar nos estudos, analisar "
+            "informações, responder perguntas, reconhecer "
+            "padrões e automatizar tarefas."
         )
 
 
@@ -505,11 +463,8 @@ def resposta_ia(texto):
             "Uma IA funciona usando modelos computacionais "
             "que processam informações e identificam "
             "padrões para realizar determinadas tarefas. 🧠🤖\n\n"
-            "Em sistemas de IA modernos, modelos podem ser "
-            "treinados com grandes quantidades de dados "
-            "para aprender padrões e produzir resultados.\n\n"
-            "O funcionamento exato depende do tipo de IA "
-            "e da tarefa que ela foi criada para realizar."
+            "Muitos sistemas modernos são treinados usando "
+            "grandes quantidades de dados."
         )
 
 
@@ -520,9 +475,6 @@ def resposta_ia(texto):
         or "o que dá pra fazer com ia" in texto
         or "o que posso fazer com ia" in texto
         or "o que posso criar com ia" in texto
-        or "o que consigo fazer com ia" in texto
-        or "o que é possível fazer com ia" in texto
-        or "o que e possivel fazer com ia" in texto
     ):
 
         memoria["assunto"] = "inteligência artificial"
@@ -530,22 +482,19 @@ def resposta_ia(texto):
         return (
             "Com inteligência artificial dá para fazer "
             "muitas coisas! 🤖🚀\n\n"
-            "Por exemplo, podemos criar assistentes virtuais, "
-            "gerar e analisar textos, ajudar nos estudos, "
-            "analisar informações, reconhecer padrões e "
-            "automatizar tarefas.\n\n"
-            "Também existem IAs capazes de trabalhar com "
-            "imagens, áudio, vídeo e programação.\n\n"
-            "O que a IA consegue fazer depende do modelo "
-            "e das ferramentas usadas para construir o sistema."
+            "Podemos criar assistentes virtuais, analisar "
+            "textos, ajudar nos estudos, analisar informações "
+            "e automatizar tarefas.\n\n"
+            "Também existem IAs que trabalham com imagens, "
+            "áudio, vídeo e programação."
         )
 
 
     return (
         "A inteligência artificial é uma área enorme "
         "da tecnologia. 🤖🧠\n\n"
-        "Se quiser, posso explicar o que é IA, para que "
-        "ela serve ou como ela funciona."
+        "Posso explicar o que é IA, para que ela serve "
+        "ou como ela funciona."
     )
 
 
@@ -562,8 +511,8 @@ def resposta_matematica(texto):
 
         return (
             "Uma fração representa uma parte de um todo. 🧮\n\n"
-            "Por exemplo, 3/4 significa três partes de um "
-            "total dividido em quatro partes iguais.\n\n"
+            "Por exemplo, 3/4 significa três partes de "
+            "um total dividido em quatro partes iguais.\n\n"
             "O número de cima é o numerador e o número "
             "de baixo é o denominador."
         )
@@ -576,7 +525,8 @@ def resposta_matematica(texto):
 
         return (
             "A matemática serve para resolver problemas "
-            "e entender números, quantidades, formas e relações. 🧮"
+            "e entender números, quantidades, formas "
+            "e relações. 🧮"
         )
 
     return None
@@ -666,15 +616,6 @@ def resposta_conversa(texto):
         return "Beleza! 😎🤖"
 
 
-    if "entendi" in texto:
-
-        return (
-            "Boa! 😎🧠\n\n"
-            "Se quiser continuar esse assunto, "
-            "pode mandar outra pergunta."
-        )
-
-
     if (
         "não entendi" in texto
         or "nao entendi" in texto
@@ -709,7 +650,7 @@ def resposta_conversa(texto):
             "Eu sou a NovaIA! 🤖🧠\n\n"
             "Sou uma assistente virtual que estamos "
             "desenvolvendo juntos.\n\n"
-            "Já consigo conversar, lembrar seu nome, "
+            "Já consigo conversar, lembrar informações, "
             "entender abreviações, resolver contas e "
             "responder perguntas sobre alguns assuntos."
         )
@@ -722,21 +663,65 @@ def resposta_conversa(texto):
 
     if "piada" in texto:
 
-        return (
-            "Claro! 😂\n\n"
-            "Por que o computador foi ao médico?\n\n"
-            "Porque estava com um vírus! 🖥️😂"
-        )
+        piadas = [
+            (
+                "Por que o computador foi ao médico? 😂\n\n"
+                "Porque estava com um vírus! 🖥️"
+            ),
+            (
+                "O que o zero disse para o oito?\n\n"
+                "Belo cinto! 😂"
+            ),
+            (
+                "Por que o livro de matemática ficou triste?\n\n"
+                "Porque tinha muitos problemas! 😂🧮"
+            )
+        ]
+
+        return random.choice(piadas)
 
 
     if "curiosidade" in texto:
 
+        curiosidades = [
+            (
+                "Uma curiosidade: Vênus gira em sentido "
+                "contrário ao da maioria dos planetas "
+                "do Sistema Solar. 🌎"
+            ),
+            (
+                "Uma curiosidade: o polvo possui três corações. 🐙"
+            ),
+            (
+                "Uma curiosidade: a luz do Sol demora "
+                "cerca de 8 minutos para chegar à Terra. ☀️"
+            )
+        ]
+
+        return random.choice(curiosidades)
+
+
+    if "como você está" in texto or "como voce esta" in texto:
+
         return (
-            "Claro! 🧠🌎\n\n"
-            "Uma curiosidade interessante é que Vênus "
-            "gira em sentido contrário ao da maioria "
-            "dos planetas do Sistema Solar."
+            "Estou funcionando direitinho! 😎🤖\n\n"
+            "E pronta para conversar com você."
         )
+
+
+    if "o que você consegue fazer" in texto:
+
+        return (
+            "Eu consigo fazer algumas coisas! 🤖\n\n"
+            "🧮 Resolver contas\n"
+            "🧠 Guardar algumas informações\n"
+            "🐍 Responder sobre Python\n"
+            "💻 Explicar programação\n"
+            "🤖 Explicar conceitos de IA\n"
+            "😄 Conversar\n\n"
+            "E estamos aumentando minhas capacidades aos poucos!"
+        )
+
 
     return None
 
@@ -960,9 +945,6 @@ def listar_conversas():
 
         titulo = conversa["titulo"]
 
-        # Se já tiver mensagens, usa a primeira
-        # mensagem como título da conversa.
-
         if (
             titulo == "Nova conversa"
             and len(conversa["mensagens"]) > 0
@@ -1041,9 +1023,6 @@ def nova_conversa():
 def excluir_conversa(id):
 
     global conversas
-
-
-    # Não deixa ficar sem nenhuma conversa.
 
     if len(conversas) <= 1:
 
@@ -1125,14 +1104,10 @@ def chat():
             break
 
 
-    # Se não encontrar, usa a primeira conversa.
-
     if conversa_encontrada is None:
 
         conversa_encontrada = conversas[0]
 
-
-    # Guarda mensagem do usuário.
 
     conversa_encontrada["mensagens"].append({
 
@@ -1142,8 +1117,6 @@ def chat():
 
     })
 
-
-    # Cria título automaticamente.
 
     if (
         conversa_encontrada["titulo"]
@@ -1158,14 +1131,10 @@ def chat():
         conversa_encontrada["titulo"] = titulo
 
 
-    # Gera resposta.
-
     resposta = gerar_resposta(
         mensagem
     )
 
-
-    # Guarda resposta da NovaIA.
 
     conversa_encontrada["mensagens"].append({
 
