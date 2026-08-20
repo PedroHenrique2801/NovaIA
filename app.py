@@ -2,7 +2,6 @@ from flask import Flask, render_template, request, jsonify
 import ast
 import operator
 import re
-import random
 
 app = Flask(__name__)
 
@@ -17,7 +16,6 @@ memoria = {
     "assunto": None
 }
 
-
 # =========================================================
 # SISTEMA DE CONVERSAS
 # =========================================================
@@ -31,7 +29,6 @@ conversas = [
 ]
 
 proximo_id = 2
-
 
 # =========================================================
 # CALCULADORA
@@ -75,7 +72,6 @@ def calcular(expressao):
                 direita = resolver(no.right)
 
                 if type(no.op) in operadores:
-
                     return operadores[type(no.op)](
                         esquerda,
                         direita
@@ -99,7 +95,6 @@ def formatar_resultado(resultado):
         return str(round(resultado, 10))
 
     return str(resultado)
-
 
 # =========================================================
 # ABREVIAÇÕES
@@ -144,7 +139,6 @@ def normalizar_texto(texto):
 
     return normalizar_abreviacoes(texto)
 
-
 # =========================================================
 # MEMÓRIA
 # =========================================================
@@ -169,7 +163,6 @@ def analisar_memoria(texto):
                 "Entendi! 🧠\n\n"
                 f"Vou lembrar que você não gosta de {coisa}."
             )
-
 
     resultado = re.search(
         r"eu gosto de (.+)",
@@ -204,13 +197,11 @@ def responder_memoria(texto):
         partes = []
 
         if memoria["nome"]:
-
             partes.append(
                 f"Seu nome é {memoria['nome']}."
             )
 
         if memoria["gosta"]:
-
             partes.append(
                 "Você gosta de "
                 + ", ".join(memoria["gosta"])
@@ -218,7 +209,6 @@ def responder_memoria(texto):
             )
 
         if memoria["nao_gosta"]:
-
             partes.append(
                 "Você não gosta de "
                 + ", ".join(memoria["nao_gosta"])
@@ -226,11 +216,9 @@ def responder_memoria(texto):
             )
 
         if memoria["assunto"]:
-
             partes.append(
                 "Nosso assunto mais recente é "
-                + memoria["assunto"]
-                + "."
+                f"{memoria['assunto']}."
             )
 
         if not partes:
@@ -245,7 +233,6 @@ def responder_memoria(texto):
             + "\n".join(partes)
         )
 
-
     if "do que eu gosto" in texto:
 
         if memoria["gosta"]:
@@ -257,7 +244,6 @@ def responder_memoria(texto):
             )
 
         return "Você ainda não me contou do que gosta. 😄"
-
 
     if "do que eu nao gosto" in texto:
 
@@ -275,7 +261,6 @@ def responder_memoria(texto):
 
     return None
 
-
 # =========================================================
 # PYTHON
 # =========================================================
@@ -284,7 +269,6 @@ def resposta_python(texto):
 
     if "python" not in texto:
         return None
-
 
     if (
         "como o python funciona" in texto
@@ -299,11 +283,10 @@ def resposta_python(texto):
             "Quando você executa um programa, o Python "
             "interpreta essas instruções e realiza as "
             "ações que você programou.\n\n"
-            "Na NovaIA, usamos Python no servidor para "
-            "receber mensagens, processá-las e enviar "
-            "respostas para o chat."
+            "Na NovaIA, o Python recebe sua mensagem, "
+            "analisa as regras do programa e prepara "
+            "uma resposta."
         )
-
 
     if (
         "pra que serve" in texto
@@ -319,10 +302,8 @@ def resposta_python(texto):
             "Ele pode ser usado para criar programas, "
             "sites, automações, servidores, ferramentas, "
             "jogos e projetos de inteligência artificial.\n\n"
-            "Também é muito usado para trabalhar com dados "
-            "e automatizar tarefas."
+            "Na NovaIA, usamos Python no servidor."
         )
-
 
     if (
         "o que da para fazer" in texto
@@ -331,18 +312,15 @@ def resposta_python(texto):
         or "o que dá pra fazer" in texto
         or "o que posso fazer" in texto
         or "o que posso criar" in texto
-        or "o que consigo fazer" in texto
     ):
 
         return (
             "Com Python dá para criar muitos projetos! 🐍🚀\n\n"
-            "Por exemplo: calculadoras, programas, "
-            "automações, servidores, ferramentas, jogos "
-            "simples e sistemas.\n\n"
+            "Calculadoras, programas, automações, servidores, "
+            "jogos simples, ferramentas e sistemas.\n\n"
             "Python também é muito usado em inteligência "
             "artificial e análise de dados."
         )
-
 
     if (
         "o que é python" in texto
@@ -358,12 +336,10 @@ def resposta_python(texto):
             "inteligência artificial."
         )
 
-
     return (
         "Python 🐍 é uma linguagem de programação muito "
         "versátil e usada em várias áreas da tecnologia."
     )
-
 
 # =========================================================
 # PROGRAMAÇÃO
@@ -380,9 +356,8 @@ def resposta_programacao(texto):
             "Programação serve para criar instruções "
             "que fazem o computador realizar tarefas. 💻\n\n"
             "Com ela podemos criar aplicativos, sites, "
-            "jogos, sistemas, automações e muito mais."
+            "jogos, sistemas e automações."
         )
-
 
     if "como funciona" in texto:
 
@@ -392,7 +367,6 @@ def resposta_programacao(texto):
             "O programador escreve essas instruções usando "
             "uma linguagem de programação."
         )
-
 
     if (
         "o que é" in texto
@@ -407,12 +381,30 @@ def resposta_programacao(texto):
 
     return None
 
-
 # =========================================================
 # INTELIGÊNCIA ARTIFICIAL
 # =========================================================
 
 def resposta_ia(texto):
+
+    palavras_ia = [
+        "inteligência artificial",
+        "inteligencia artificial",
+        "o que é ia",
+        "o que e ia",
+        "ia"
+    ]
+
+    encontrou = False
+
+    for palavra in palavras_ia:
+
+        if palavra in texto:
+            encontrou = True
+            break
+
+    if not encontrou:
+        return None
 
     if (
         "o que é inteligência artificial" in texto
@@ -429,10 +421,8 @@ def resposta_ia(texto):
             "de realizar tarefas que normalmente exigiriam "
             "algum tipo de inteligência humana. 🤖🧠\n\n"
             "Uma IA pode analisar informações, reconhecer "
-            "padrões, conversar, classificar dados ou gerar "
-            "conteúdos, dependendo do sistema."
+            "padrões, conversar e realizar várias tarefas."
         )
-
 
     if (
         "pra que serve" in texto
@@ -450,7 +440,6 @@ def resposta_ia(texto):
             "padrões e automatizar tarefas."
         )
 
-
     if (
         "como funciona" in texto
         or "como a ia funciona" in texto
@@ -461,34 +450,11 @@ def resposta_ia(texto):
 
         return (
             "Uma IA funciona usando modelos computacionais "
-            "que processam informações e identificam "
-            "padrões para realizar determinadas tarefas. 🧠🤖\n\n"
-            "Muitos sistemas modernos são treinados usando "
-            "grandes quantidades de dados."
+            "que processam informações e identificam padrões. 🧠🤖\n\n"
+            "Em sistemas modernos, modelos podem ser "
+            "treinados com muitos dados para aprender "
+            "padrões e produzir resultados."
         )
-
-
-    if (
-        "o que da para fazer com ia" in texto
-        or "o que dá para fazer com ia" in texto
-        or "o que da pra fazer com ia" in texto
-        or "o que dá pra fazer com ia" in texto
-        or "o que posso fazer com ia" in texto
-        or "o que posso criar com ia" in texto
-    ):
-
-        memoria["assunto"] = "inteligência artificial"
-
-        return (
-            "Com inteligência artificial dá para fazer "
-            "muitas coisas! 🤖🚀\n\n"
-            "Podemos criar assistentes virtuais, analisar "
-            "textos, ajudar nos estudos, analisar informações "
-            "e automatizar tarefas.\n\n"
-            "Também existem IAs que trabalham com imagens, "
-            "áudio, vídeo e programação."
-        )
-
 
     return (
         "A inteligência artificial é uma área enorme "
@@ -496,7 +462,6 @@ def resposta_ia(texto):
         "Posso explicar o que é IA, para que ela serve "
         "ou como ela funciona."
     )
-
 
 # =========================================================
 # MATEMÁTICA
@@ -511,12 +476,11 @@ def resposta_matematica(texto):
 
         return (
             "Uma fração representa uma parte de um todo. 🧮\n\n"
-            "Por exemplo, 3/4 significa três partes de "
-            "um total dividido em quatro partes iguais.\n\n"
+            "Por exemplo, 3/4 significa três partes de um "
+            "total dividido em quatro partes iguais.\n\n"
             "O número de cima é o numerador e o número "
             "de baixo é o denominador."
         )
-
 
     if (
         "pra que serve" in texto
@@ -525,12 +489,85 @@ def resposta_matematica(texto):
 
         return (
             "A matemática serve para resolver problemas "
-            "e entender números, quantidades, formas "
-            "e relações. 🧮"
+            "e entender números, quantidades, formas e relações. 🧮"
         )
 
     return None
 
+# =========================================================
+# RESPOSTAS EXTRAS
+# =========================================================
+
+def resposta_extra(texto):
+
+    if (
+        "quem criou você" in texto
+        or "quem criou voce" in texto
+    ):
+
+        return (
+            "Eu fui criada através de código! 🤖💻\n\n"
+            "E você está desenvolvendo a NovaIA comigo."
+        )
+
+    if (
+        "você é uma ia" in texto
+        or "voce e uma ia" in texto
+    ):
+
+        return (
+            "Sim! 🤖\n\n"
+            "Eu sou a NovaIA, uma assistente virtual "
+            "que estamos construindo com Python."
+        )
+
+    if (
+        "você é inteligente" in texto
+        or "voce e inteligente" in texto
+    ):
+
+        return (
+            "Estou ficando cada vez melhor! 😎🧠\n\n"
+            "Já consigo conversar, lembrar algumas "
+            "informações, fazer contas e responder "
+            "perguntas sobre vários assuntos."
+        )
+
+    if (
+        "me ajuda" in texto
+        or "me ajude" in texto
+    ):
+
+        return (
+            "Claro! 😄🤖\n\n"
+            "Pode me falar o que você precisa."
+        )
+
+    if "tudo bem" in texto:
+
+        return (
+            "Tudo certo por aqui! 😎🤖\n\n"
+            "E com você?"
+        )
+
+    if (
+        "você está aí" in texto
+        or "voce esta ai" in texto
+    ):
+
+        return "Estou aqui! 🤖😎 Pode mandar."
+
+    if (
+        "você sabe meu nome" in texto
+        or "voce sabe meu nome" in texto
+    ):
+
+        if memoria["nome"]:
+            return f"Sei sim! Seu nome é {memoria['nome']}! 🧠"
+
+        return "Ainda não. Me diga seu nome que eu posso lembrar."
+
+    return None
 
 # =========================================================
 # CONVERSA
@@ -565,14 +602,12 @@ def resposta_conversa(texto):
             "Como posso ajudar você hoje?"
         )
 
-
     if "bom dia" in texto:
 
         return (
             "Bom dia! ☀️\n\n"
             "Espero que seu dia esteja começando bem!"
         )
-
 
     if "boa tarde" in texto:
 
@@ -581,14 +616,12 @@ def resposta_conversa(texto):
             "Como posso ajudar?"
         )
 
-
     if "boa noite" in texto:
 
         return (
             "Boa noite! 🌙\n\n"
             "Espero que você tenha tido um ótimo dia!"
         )
-
 
     if (
         "obrigado" in texto
@@ -600,21 +633,22 @@ def resposta_conversa(texto):
             "Fico feliz em ajudar!"
         )
 
-
     if "valeu" in texto:
-
         return "É nós! 😎🤖"
 
-
     if "falou" in texto:
-
         return "Falou! 👋 Até a próxima!"
 
-
     if "beleza" in texto:
-
         return "Beleza! 😎🤖"
 
+    if "entendi" in texto:
+
+        return (
+            "Boa! 😎🧠\n\n"
+            "Se quiser continuar esse assunto, "
+            "pode mandar outra pergunta."
+        )
 
     if (
         "não entendi" in texto
@@ -627,7 +661,6 @@ def resposta_conversa(texto):
             "ou dar um exemplo."
         )
 
-
     if (
         "seu nome" in texto
         or "como você se chama" in texto
@@ -639,7 +672,6 @@ def resposta_conversa(texto):
             "Sou a assistente virtual que estamos "
             "construindo juntos."
         )
-
 
     if (
         "quem é você" in texto
@@ -655,76 +687,28 @@ def resposta_conversa(texto):
             "responder perguntas sobre alguns assuntos."
         )
 
-
     if "capital do brasil" in texto:
 
         return "A capital do Brasil é Brasília! 🇧🇷"
 
-
     if "piada" in texto:
 
-        piadas = [
-            (
-                "Por que o computador foi ao médico? 😂\n\n"
-                "Porque estava com um vírus! 🖥️"
-            ),
-            (
-                "O que o zero disse para o oito?\n\n"
-                "Belo cinto! 😂"
-            ),
-            (
-                "Por que o livro de matemática ficou triste?\n\n"
-                "Porque tinha muitos problemas! 😂🧮"
-            )
-        ]
-
-        return random.choice(piadas)
-
+        return (
+            "Claro! 😂\n\n"
+            "Por que o computador foi ao médico?\n\n"
+            "Porque estava com um vírus! 🖥️😂"
+        )
 
     if "curiosidade" in texto:
 
-        curiosidades = [
-            (
-                "Uma curiosidade: Vênus gira em sentido "
-                "contrário ao da maioria dos planetas "
-                "do Sistema Solar. 🌎"
-            ),
-            (
-                "Uma curiosidade: o polvo possui três corações. 🐙"
-            ),
-            (
-                "Uma curiosidade: a luz do Sol demora "
-                "cerca de 8 minutos para chegar à Terra. ☀️"
-            )
-        ]
-
-        return random.choice(curiosidades)
-
-
-    if "como você está" in texto or "como voce esta" in texto:
-
         return (
-            "Estou funcionando direitinho! 😎🤖\n\n"
-            "E pronta para conversar com você."
+            "Claro! 🧠🌎\n\n"
+            "Uma curiosidade interessante é que Vênus "
+            "gira em sentido contrário ao da maioria "
+            "dos planetas do Sistema Solar."
         )
-
-
-    if "o que você consegue fazer" in texto:
-
-        return (
-            "Eu consigo fazer algumas coisas! 🤖\n\n"
-            "🧮 Resolver contas\n"
-            "🧠 Guardar algumas informações\n"
-            "🐍 Responder sobre Python\n"
-            "💻 Explicar programação\n"
-            "🤖 Explicar conceitos de IA\n"
-            "😄 Conversar\n\n"
-            "E estamos aumentando minhas capacidades aos poucos!"
-        )
-
 
     return None
-
 
 # =========================================================
 # GERAR RESPOSTA
@@ -733,7 +717,6 @@ def resposta_conversa(texto):
 def gerar_resposta(mensagem):
 
     texto = normalizar_texto(mensagem)
-
 
     # NOME
 
@@ -750,7 +733,6 @@ def gerar_resposta(mensagem):
             "Agora vou lembrar do seu nome."
         )
 
-
     if texto.startswith("meu nome e "):
 
         nome = mensagem[
@@ -763,7 +745,6 @@ def gerar_resposta(mensagem):
             f"Prazer em te conhecer, {nome}! 😄"
         )
 
-
     if texto.startswith("me chamo "):
 
         nome = mensagem[
@@ -775,7 +756,6 @@ def gerar_resposta(mensagem):
         return (
             f"Prazer em te conhecer, {nome}! 😄"
         )
-
 
     if (
         "qual é meu nome" in texto
@@ -796,7 +776,6 @@ def gerar_resposta(mensagem):
             "Você ainda não me contou seu nome. 😄"
         )
 
-
     # MEMÓRIA
 
     resposta = analisar_memoria(texto)
@@ -804,12 +783,10 @@ def gerar_resposta(mensagem):
     if resposta is not None:
         return resposta
 
-
     resposta = responder_memoria(texto)
 
     if resposta is not None:
         return resposta
-
 
     # PYTHON
 
@@ -819,7 +796,6 @@ def gerar_resposta(mensagem):
 
         if resposta is not None:
             return resposta
-
 
     # IA
 
@@ -836,7 +812,6 @@ def gerar_resposta(mensagem):
         if resposta is not None:
             return resposta
 
-
     # PROGRAMAÇÃO
 
     if (
@@ -849,7 +824,6 @@ def gerar_resposta(mensagem):
 
         if resposta is not None:
             return resposta
-
 
     # MATEMÁTICA
 
@@ -865,6 +839,12 @@ def gerar_resposta(mensagem):
         if resposta is not None:
             return resposta
 
+    # RESPOSTAS EXTRAS
+
+    resposta = resposta_extra(texto)
+
+    if resposta is not None:
+        return resposta
 
     # CONVERSA
 
@@ -872,7 +852,6 @@ def gerar_resposta(mensagem):
 
     if resposta is not None:
         return resposta
-
 
     # CALCULADORA
 
@@ -909,7 +888,6 @@ def gerar_resposta(mensagem):
             f"{formatar_resultado(resultado)} 🧮"
         )
 
-
     # RESPOSTA PADRÃO
 
     return (
@@ -918,7 +896,6 @@ def gerar_resposta(mensagem):
         "tentar entender se você explicar "
         "um pouco mais."
     )
-
 
 # =========================================================
 # PÁGINA PRINCIPAL
@@ -930,7 +907,6 @@ def inicio():
     return render_template(
         "index.html"
     )
-
 
 # =========================================================
 # LISTAR CONVERSAS
@@ -967,7 +943,6 @@ def listar_conversas():
 
     return jsonify(resultado)
 
-
 # =========================================================
 # ABRIR UMA CONVERSA
 # =========================================================
@@ -984,7 +959,6 @@ def abrir_conversa(id):
     return jsonify({
         "erro": "Conversa não encontrada."
     }), 404
-
 
 # =========================================================
 # NOVA CONVERSA
@@ -1011,7 +985,6 @@ def nova_conversa():
 
     return jsonify(nova)
 
-
 # =========================================================
 # EXCLUIR CONVERSA
 # =========================================================
@@ -1035,7 +1008,6 @@ def excluir_conversa(id):
 
         })
 
-
     for conversa in conversas:
 
         if conversa["id"] == id:
@@ -1048,7 +1020,6 @@ def excluir_conversa(id):
 
             })
 
-
     return jsonify({
 
         "sucesso": False,
@@ -1056,7 +1027,6 @@ def excluir_conversa(id):
         "mensagem": "Conversa não encontrada."
 
     }), 404
-
 
 # =========================================================
 # CHAT
@@ -1075,7 +1045,6 @@ def chat():
         ""
     ).strip()
 
-
     if not mensagem:
 
         return jsonify({
@@ -1085,15 +1054,12 @@ def chat():
 
         })
 
-
     conversa_id = dados.get(
         "conversa_id",
         1
     )
 
-
     conversa_encontrada = None
-
 
     for conversa in conversas:
 
@@ -1103,11 +1069,9 @@ def chat():
 
             break
 
-
     if conversa_encontrada is None:
 
         conversa_encontrada = conversas[0]
-
 
     conversa_encontrada["mensagens"].append({
 
@@ -1116,7 +1080,6 @@ def chat():
         "texto": mensagem
 
     })
-
 
     if (
         conversa_encontrada["titulo"]
@@ -1130,11 +1093,9 @@ def chat():
 
         conversa_encontrada["titulo"] = titulo
 
-
     resposta = gerar_resposta(
         mensagem
     )
-
 
     conversa_encontrada["mensagens"].append({
 
@@ -1144,7 +1105,6 @@ def chat():
 
     })
 
-
     return jsonify({
 
         "resposta": resposta,
@@ -1153,7 +1113,6 @@ def chat():
             conversa_encontrada["id"]
 
     })
-
 
 # =========================================================
 # INICIAR SERVIDOR
