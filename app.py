@@ -2,6 +2,9 @@ from flask import Flask, render_template, request, jsonify
 import ast
 import operator
 import re
+import urllib.parse
+import urllib.request
+import json
 
 app = Flask(__name__)
 
@@ -13,7 +16,8 @@ memoria = {
     "nome": None,
     "gosta": [],
     "nao_gosta": [],
-    "assunto": None
+    "assunto": None,
+    "fatos": []
 }
 
 # =========================================================
@@ -49,12 +53,14 @@ def calcular(expressao):
             ast.Sub: operator.sub,
             ast.Mult: operator.mul,
             ast.Div: operator.truediv,
-            ast.Pow: operator.pow
+            ast.Pow: operator.pow,
+            ast.Mod: operator.mod
         }
 
         def resolver(no):
 
             if isinstance(no, ast.Constant):
+
                 if isinstance(no.value, (int, float)):
                     return no.value
 
@@ -72,6 +78,10 @@ def calcular(expressao):
                 direita = resolver(no.right)
 
                 if type(no.op) in operadores:
+
+                    if type(no.op) is ast.Pow and abs(direita) > 100:
+                        raise ValueError
+
                     return operadores[type(no.op)](
                         esquerda,
                         direita
@@ -97,6 +107,51 @@ def formatar_resultado(resultado):
     return str(resultado)
 
 # =========================================================
+# FRAÇÕES
+# =========================================================
+
+def calcular_fracao(texto):
+
+    padrao = re.search(
+        r"(\d+)\s*/\s*(\d+)\s*([+\-*])\s*(\d+)\s*/\s*(\d+)",
+        texto
+    )
+
+    if not padrao:
+        return None
+
+    n1 = int(padrao.group(1))
+    d1 = int(padrao.group(2))
+    operador_fracao = padrao.group(3)
+    n2 = int(padrao.group(4))
+    d2 = int(padrao.group(5))
+
+    if d1 == 0 or d2 == 0:
+        return "Não é possível dividir por zero. ❌"
+
+    if operador_fracao == "+":
+        numerador = n1 * d2 + n2 * d1
+        denominador = d1 * d2
+
+    elif operador_fracao == "-":
+        numerador = n1 * d2 - n2 * d1
+        denominador = d1 * d2
+
+    else:
+        numerador = n1 * n2
+        denominador = d1 * d2
+
+    divisor = abs(__import__("math").gcd(numerador, denominador))
+
+    numerador //= divisor
+    denominador //= divisor
+
+    return (
+        f"{n1}/{d1} {operador_fracao} {n2}/{d2} = "
+        f"{numerador}/{denominador} 🧮"
+    )
+
+# =========================================================
 # ABREVIAÇÕES
 # =========================================================
 
@@ -116,6 +171,7 @@ def normalizar_abreviacoes(texto):
         "flw": "falou",
         "dps": "depois",
         "nn": "não",
+        "n": "não",
 
         "phyton": "python",
         "pyton": "python",
@@ -183,6 +239,48 @@ def analisar_memoria(texto):
                 f"Vou lembrar que você gosta de {coisa}."
             )
 
+    resultado = re.search(
+        r"eu moro em (.+)",
+        texto
+    )
+
+    if resultado:
+
+        local = resultado.group(1).strip()
+
+        if local and local not in memoria["fatos"]:
+            memoria["fatos"].append(
+                f"Mora em {local}"
+            )
+
+        return (
+            "Entendi! 🧠\n\n"
+            "Vou lembrar dessa informação."
+        )
+
+    resultado = re.search(
+        r"eu tenho (\d+) anos",
+        texto
+    )
+
+    if resultado:
+
+        idade = resultado.group(1)
+
+        memoria["fatos"] = [
+            fato for fato in memoria["fatos"]
+            if not fato.startswith("Tem ")
+        ]
+
+        memoria["fatos"].append(
+            f"Tem {idade} anos"
+        )
+
+        return (
+            "Entendi! 🧠\n\n"
+            "Vou lembrar dessa informação."
+        )
+
     return None
 
 
@@ -192,6 +290,8 @@ def responder_memoria(texto):
         "o que voce lembra de mim" in texto
         or "o que lembra de mim" in texto
         or "o que voce sabe sobre mim" in texto
+        or "o que você lembra de mim" in texto
+        or "o que você sabe sobre mim" in texto
     ):
 
         partes = []
@@ -214,6 +314,9 @@ def responder_memoria(texto):
                 + ", ".join(memoria["nao_gosta"])
                 + "."
             )
+
+        if memoria["fatos"]:
+            partes.extend(memoria["fatos"])
 
         if memoria["assunto"]:
             partes.append(
@@ -278,14 +381,12 @@ def resposta_python(texto):
     ):
 
         return (
-            "O Python funciona através de instruções que "
-            "você escreve em código. 🐍💻\n\n"
-            "Quando você executa um programa, o Python "
-            "interpreta essas instruções e realiza as "
-            "ações que você programou.\n\n"
-            "Na NovaIA, o Python recebe sua mensagem, "
-            "analisa as regras do programa e prepara "
-            "uma resposta."
+            "O Python funciona através de instruções "
+            "que você escreve em código. 🐍💻\n\n"
+            "O programa interpreta essas instruções "
+            "e executa as ações programadas.\n\n"
+            "Na NovaIA, usamos Python para controlar "
+            "o servidor, receber mensagens e gerar respostas."
         )
 
     if (
@@ -294,15 +395,14 @@ def resposta_python(texto):
         or "serve para que" in texto
         or "usado para" in texto
         or "usada para" in texto
-        or "serve pra" in texto
     ):
 
         return (
             "Python é usado para muitas coisas! 🐍💻\n\n"
-            "Ele pode ser usado para criar programas, "
-            "sites, automações, servidores, ferramentas, "
-            "jogos e projetos de inteligência artificial.\n\n"
-            "Na NovaIA, usamos Python no servidor."
+            "Ele pode criar programas, sites, "
+            "automações, servidores, ferramentas, "
+            "jogos e sistemas de inteligência artificial.\n\n"
+            "A NovaIA também usa Python."
         )
 
     if (
@@ -316,10 +416,9 @@ def resposta_python(texto):
 
         return (
             "Com Python dá para criar muitos projetos! 🐍🚀\n\n"
-            "Calculadoras, programas, automações, servidores, "
-            "jogos simples, ferramentas e sistemas.\n\n"
-            "Python também é muito usado em inteligência "
-            "artificial e análise de dados."
+            "Calculadoras, aplicativos, servidores, "
+            "automações, ferramentas, jogos e sistemas "
+            "de inteligência artificial."
         )
 
     if (
@@ -331,14 +430,13 @@ def resposta_python(texto):
         return (
             "Python 🐍 é uma linguagem de programação "
             "muito usada na tecnologia.\n\n"
-            "Com ela podemos criar programas, automações, "
-            "servidores, ferramentas e projetos de "
-            "inteligência artificial."
+            "Ela permite criar programas, servidores, "
+            "automações, ferramentas e sistemas de IA."
         )
 
     return (
-        "Python 🐍 é uma linguagem de programação muito "
-        "versátil e usada em várias áreas da tecnologia."
+        "Python 🐍 é uma linguagem de programação "
+        "versátil usada em várias áreas da tecnologia."
     )
 
 # =========================================================
@@ -364,8 +462,8 @@ def resposta_programacao(texto):
         return (
             "Programação funciona através de instruções "
             "que o computador executa. 💻\n\n"
-            "O programador escreve essas instruções usando "
-            "uma linguagem de programação."
+            "O programador escreve essas instruções "
+            "usando uma linguagem de programação."
         )
 
     if (
@@ -375,8 +473,8 @@ def resposta_programacao(texto):
     ):
 
         return (
-            "Programação é o processo de escrever instruções "
-            "para um computador executar. 💻"
+            "Programação é o processo de escrever "
+            "instruções para um computador executar. 💻"
         )
 
     return None
@@ -386,25 +484,6 @@ def resposta_programacao(texto):
 # =========================================================
 
 def resposta_ia(texto):
-
-    palavras_ia = [
-        "inteligência artificial",
-        "inteligencia artificial",
-        "o que é ia",
-        "o que e ia",
-        "ia"
-    ]
-
-    encontrou = False
-
-    for palavra in palavras_ia:
-
-        if palavra in texto:
-            encontrou = True
-            break
-
-    if not encontrou:
-        return None
 
     if (
         "o que é inteligência artificial" in texto
@@ -417,27 +496,26 @@ def resposta_ia(texto):
 
         return (
             "Inteligência Artificial, ou IA, é uma área "
-            "da computação que busca criar sistemas capazes "
-            "de realizar tarefas que normalmente exigiriam "
-            "algum tipo de inteligência humana. 🤖🧠\n\n"
-            "Uma IA pode analisar informações, reconhecer "
-            "padrões, conversar e realizar várias tarefas."
+            "da computação que cria sistemas capazes "
+            "de realizar tarefas de forma inteligente. 🤖🧠\n\n"
+            "Dependendo do sistema, ela pode analisar "
+            "informações, reconhecer padrões, conversar "
+            "e gerar conteúdo."
         )
 
     if (
         "pra que serve" in texto
         or "para que serve" in texto
-        or "serve para que" in texto
     ):
 
         memoria["assunto"] = "inteligência artificial"
 
         return (
-            "A inteligência artificial pode ser usada "
-            "para muitas tarefas! 🤖\n\n"
-            "Ela pode ajudar nos estudos, analisar "
-            "informações, responder perguntas, reconhecer "
-            "padrões e automatizar tarefas."
+            "A inteligência artificial pode ajudar "
+            "em muitas tarefas! 🤖\n\n"
+            "Ela pode analisar informações, responder "
+            "perguntas, reconhecer padrões, ajudar "
+            "nos estudos e automatizar tarefas."
         )
 
     if (
@@ -449,8 +527,8 @@ def resposta_ia(texto):
         memoria["assunto"] = "inteligência artificial"
 
         return (
-            "Uma IA funciona usando modelos computacionais "
-            "que processam informações e identificam padrões. 🧠🤖\n\n"
+            "Uma IA processa informações usando modelos "
+            "computacionais capazes de identificar padrões. 🧠🤖\n\n"
             "Em sistemas modernos, modelos podem ser "
             "treinados com muitos dados para aprender "
             "padrões e produzir resultados."
@@ -469,6 +547,12 @@ def resposta_ia(texto):
 
 def resposta_matematica(texto):
 
+    fracao = calcular_fracao(texto)
+
+    if fracao:
+        memoria["assunto"] = "matemática"
+        return fracao
+
     if (
         "o que é uma fração" in texto
         or "o que e uma fracao" in texto
@@ -476,10 +560,17 @@ def resposta_matematica(texto):
 
         return (
             "Uma fração representa uma parte de um todo. 🧮\n\n"
-            "Por exemplo, 3/4 significa três partes de um "
-            "total dividido em quatro partes iguais.\n\n"
+            "Por exemplo, 3/4 significa três partes "
+            "de um total dividido em quatro partes iguais.\n\n"
             "O número de cima é o numerador e o número "
             "de baixo é o denominador."
+        )
+
+    if "porcentagem" in texto:
+
+        return (
+            "Porcentagem representa uma parte de 100. 🧮\n\n"
+            "Por exemplo, 25% significa 25 de cada 100."
         )
 
     if (
@@ -489,7 +580,8 @@ def resposta_matematica(texto):
 
         return (
             "A matemática serve para resolver problemas "
-            "e entender números, quantidades, formas e relações. 🧮"
+            "e entender números, quantidades, formas "
+            "e relações. 🧮"
         )
 
     return None
@@ -528,9 +620,8 @@ def resposta_extra(texto):
 
         return (
             "Estou ficando cada vez melhor! 😎🧠\n\n"
-            "Já consigo conversar, lembrar algumas "
-            "informações, fazer contas e responder "
-            "perguntas sobre vários assuntos."
+            "Já consigo conversar, lembrar informações, "
+            "fazer contas e responder perguntas."
         )
 
     if (
@@ -565,7 +656,12 @@ def resposta_extra(texto):
         if memoria["nome"]:
             return f"Sei sim! Seu nome é {memoria['nome']}! 🧠"
 
-        return "Ainda não. Me diga seu nome que eu posso lembrar."
+        return (
+            "Ainda não. Me diga seu nome que eu posso lembrar."
+        )
+
+    if "obrigado" in texto or "obrigada" in texto:
+        return "Por nada! 😄🤖"
 
     return None
 
@@ -603,35 +699,13 @@ def resposta_conversa(texto):
         )
 
     if "bom dia" in texto:
-
-        return (
-            "Bom dia! ☀️\n\n"
-            "Espero que seu dia esteja começando bem!"
-        )
+        return "Bom dia! ☀️\n\nComo posso ajudar hoje?"
 
     if "boa tarde" in texto:
-
-        return (
-            "Boa tarde! 😄\n\n"
-            "Como posso ajudar?"
-        )
+        return "Boa tarde! 😄\n\nComo posso ajudar?"
 
     if "boa noite" in texto:
-
-        return (
-            "Boa noite! 🌙\n\n"
-            "Espero que você tenha tido um ótimo dia!"
-        )
-
-    if (
-        "obrigado" in texto
-        or "obrigada" in texto
-    ):
-
-        return (
-            "Por nada! 😄\n\n"
-            "Fico feliz em ajudar!"
-        )
+        return "Boa noite! 🌙\n\nComo posso ajudar?"
 
     if "valeu" in texto:
         return "É nós! 😎🤖"
@@ -646,8 +720,7 @@ def resposta_conversa(texto):
 
         return (
             "Boa! 😎🧠\n\n"
-            "Se quiser continuar esse assunto, "
-            "pode mandar outra pergunta."
+            "Pode continuar o assunto."
         )
 
     if (
@@ -680,15 +753,12 @@ def resposta_conversa(texto):
 
         return (
             "Eu sou a NovaIA! 🤖🧠\n\n"
-            "Sou uma assistente virtual que estamos "
-            "desenvolvendo juntos.\n\n"
+            "Sou uma assistente virtual feita com Python.\n\n"
             "Já consigo conversar, lembrar informações, "
-            "entender abreviações, resolver contas e "
-            "responder perguntas sobre alguns assuntos."
+            "resolver contas e responder sobre vários assuntos."
         )
 
     if "capital do brasil" in texto:
-
         return "A capital do Brasil é Brasília! 🇧🇷"
 
     if "piada" in texto:
@@ -707,6 +777,88 @@ def resposta_conversa(texto):
             "gira em sentido contrário ao da maioria "
             "dos planetas do Sistema Solar."
         )
+
+    return None
+
+# =========================================================
+# PESQUISA NA INTERNET
+# =========================================================
+
+def pesquisar_web(pergunta):
+
+    try:
+
+        consulta = urllib.parse.quote(pergunta)
+
+        url = (
+            "https://api.duckduckgo.com/"
+            f"?q={consulta}"
+            "&format=json"
+            "&no_html=1"
+            "&skip_disambig=1"
+        )
+
+        requisicao = urllib.request.Request(
+            url,
+            headers={
+                "User-Agent": "NovaIA/1.0"
+            }
+        )
+
+        with urllib.request.urlopen(
+            requisicao,
+            timeout=5
+        ) as resposta:
+
+            dados = json.loads(
+                resposta.read().decode("utf-8")
+            )
+
+        resumo = dados.get(
+            "AbstractText",
+            ""
+        )
+
+        titulo = dados.get(
+            "Heading",
+            ""
+        )
+
+        if resumo:
+
+            memoria["assunto"] = pergunta
+
+            return (
+                f"Encontrei uma informação sobre "
+                f"**{titulo or pergunta}**. 🌐\n\n"
+                f"{resumo}"
+            )
+
+        resultados = dados.get(
+            "RelatedTopics",
+            []
+        )
+
+        for item in resultados:
+
+            if isinstance(item, dict):
+
+                texto = item.get(
+                    "Text",
+                    ""
+                )
+
+                if texto:
+
+                    memoria["assunto"] = pergunta
+
+                    return (
+                        "Encontrei isto na pesquisa: 🌐\n\n"
+                        + texto
+                    )
+
+    except Exception:
+        pass
 
     return None
 
@@ -767,14 +919,9 @@ def gerar_resposta(mensagem):
     ):
 
         if memoria["nome"]:
+            return f"Seu nome é {memoria['nome']}! 🧠"
 
-            return (
-                f"Seu nome é {memoria['nome']}! 🧠"
-            )
-
-        return (
-            "Você ainda não me contou seu nome. 😄"
-        )
+        return "Você ainda não me contou seu nome. 😄"
 
     # MEMÓRIA
 
@@ -832,6 +979,10 @@ def gerar_resposta(mensagem):
         or "matematica" in texto
         or "fração" in texto
         or "fracao" in texto
+        or re.search(
+            r"\d+\s*/\s*\d+\s*[+\-*]\s*\d+\s*/\s*\d+",
+            texto
+        )
     ):
 
         resposta = resposta_matematica(texto)
@@ -888,13 +1039,63 @@ def gerar_resposta(mensagem):
             f"{formatar_resultado(resultado)} 🧮"
         )
 
+    # PESQUISA
+
+    palavras_pesquisa = [
+        "pesquise",
+        "pesquisa",
+        "procure",
+        "procura",
+        "pesquisar",
+        "quem é",
+        "quem foi",
+        "quando foi",
+        "onde fica",
+        "últimas notícias",
+        "notícias sobre"
+    ]
+
+    deve_pesquisar = False
+
+    for palavra in palavras_pesquisa:
+
+        if palavra in texto:
+
+            deve_pesquisar = True
+            break
+
+    if deve_pesquisar:
+
+        pergunta = texto
+
+        for palavra in palavras_pesquisa:
+            pergunta = pergunta.replace(
+                palavra,
+                ""
+            )
+
+        pergunta = pergunta.strip()
+
+        resultado_web = pesquisar_web(
+            pergunta
+        )
+
+        if resultado_web:
+            return resultado_web
+
+        return (
+            "Tentei pesquisar na internet, "
+            "mas não consegui encontrar uma "
+            "resposta agora. 🌐"
+        )
+
     # RESPOSTA PADRÃO
 
     return (
-        "Entendi! 🧠\n\n"
-        "Ainda estou aprendendo, mas posso "
-        "tentar entender se você explicar "
-        "um pouco mais."
+        "Entendi! 🧠🤖\n\n"
+        "Ainda estou aprendendo esse assunto.\n\n"
+        "Você pode tentar perguntar de outra forma "
+        "ou pedir para eu pesquisar na internet."
     )
 
 # =========================================================
@@ -936,7 +1137,6 @@ def listar_conversas():
         resultado.append({
 
             "id": conversa["id"],
-
             "titulo": titulo
 
         })
@@ -964,7 +1164,10 @@ def abrir_conversa(id):
 # NOVA CONVERSA
 # =========================================================
 
-@app.route("/nova_conversa", methods=["POST"])
+@app.route(
+    "/nova_conversa",
+    methods=["POST"]
+)
 def nova_conversa():
 
     global proximo_id
