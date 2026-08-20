@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NovaIA</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f2f2f2;
+        }
+
+        .app {
+            max-width: 600px;
+            height: 100vh;
+            margin: auto;
+            background: white;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: #222;
+            color: white;
+            padding: 20px;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        #chat {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .mensagem {
+            margin-bottom: 15px;
+            padding: 12px 15px;
+            border-radius: 15px;
+            max-width: 80%;
+        }
+
+        .novaia {
+            background: #eeeeee;
+        }
+
+        .usuario {
+            background: #222;
+            color: white;
+            margin-left: auto;
+        }
+
+        .entrada {
+            display: flex;
+            padding: 15px;
+            border-top: 1px solid #ddd;
+            gap: 10px;
+        }
+
+        input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            font-size: 16px;
+        }
+
+        button {
+            border: none;
+            background: #222;
+            color: white;
+            padding: 12px 18px;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="app">
+
+    <header>
+        🤖 NovaIA
+    </header>
+
+    <div id="chat">
+        <div class="mensagem novaia">
+            Olá! Eu sou a NovaIA 🤖
+        </div>
+    </div>
+
+    <div class="entrada">
+        <input id="mensagem" type="text" placeholder="Digite uma mensagem...">
+        <button onclick="enviar()">Enviar</button>
+    </div>
+
+</div>
+
+<script>
+function enviar() {
+    const input = document.getElementById("mensagem");
+    const chat = document.getElementById("chat");
+
+    if (input.value.trim() === "") return;
+
+    const texto = input.value;
+
+    chat.innerHTML += `
+        <div class="mensagem usuario">
+            ${texto}
+        </div>
+    `;
+
+    input.value = "";
+
+    chat.innerHTML += `
+        <div class="mensagem novaia">
+            Recebi sua mensagem! 🤖
+        </div>
+    `;
+
+    chat.scrollTop = chat.scrollHeight;
+}
+</script>
+
+</body>
+</html>

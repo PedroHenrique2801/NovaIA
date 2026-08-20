@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>NovaIA</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+</head>
+
+<body>
+
+<div class="app">
+
+    <!-- BARRA LATERAL -->
+
+    <aside class="sidebar">
+
+        <div class="sidebar-top">
+
+            <div class="marca">
+
+                <div class="marca-icone">
+                    ✦
+                </div>
+
+                <span>NovaIA</span>
+
+            </div>
+
+
+            <button
+                class="novo-chat"
+                id="novoChat"
+            >
+                <span>＋</span>
+                Novo chat
+            </button>
+
+        </div>
+
+
+        <div class="historico">
+
+            <div class="historico-titulo">
+                Conversas
+            </div>
+
+            <div id="listaConversas"></div>
+
+        </div>
+
+
+        <div class="sidebar-bottom">
+
+            <div class="perfil">
+
+                <div class="perfil-icone">
+                    N
+                </div>
+
+                <div>
+
+                    <strong>NovaIA</strong>
+
+                    <small>
+                        Assistente virtual
+                    </small>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </aside>
+
+
+    <!-- ÁREA PRINCIPAL -->
+
+    <main class="principal">
+
+        <header class="cabecalho">
+
+            <div class="cabecalho-esquerda">
+
+                <div class="icone-cabecalho">
+                    ✦
+                </div>
+
+                <div>
+
+                    <strong>
+                        NovaIA
+                    </strong>
+
+                    <div class="online">
+
+                        <span></span>
+
+                        Online
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </header>
+
+
+        <!-- CHAT -->
+
+        <section
+            class="chat"
+            id="chat"
+        >
+
+        </section>
+
+
+        <!-- DIGITANDO -->
+
+        <div
+            class="digitando"
+            id="digitando"
+        >
+
+            <span>
+                NovaIA está digitando
+            </span>
+
+            <i></i>
+            <i></i>
+            <i></i>
+
+        </div>
+
+
+        <!-- ENVIO -->
+
+        <footer class="area-envio">
+
+            <div class="caixa-envio">
+
+                <input
+                    type="text"
+                    id="mensagem"
+                    placeholder="Pergunte alguma coisa..."
+                    autocomplete="off"
+                >
+
+                <button
+                    id="enviar"
+                    type="button"
+                >
+                    ↑
+                </button>
+
+            </div>
+
+            <p class="aviso">
+                A NovaIA pode cometer erros.
+                Confira informações importantes.
+            </p>
+
+        </footer>
+
+    </main>
+
+</div>
+
+
+<script>
+
+let conversaAtual = 1;
+
+
+/* ELEMENTOS */
+
+const input =
+    document.getElementById("mensagem");
+
+const botao =
+    document.getElementById("enviar");
+
+const chat =
+    document.getElementById("chat");
+
+const digitando =
+    document.getElementById("digitando");
+
+const novoChat =
+    document.getElementById("novoChat");
+
+const listaConversas =
+    document.getElementById("listaConversas");
+
+
+/* =========================
+   CARREGAR CONVERSAS
+========================= */
+
+async function carregarConversas() {
+
+    try {
+
+        const resposta =
+            await fetch("/conversas");
+
+        const conversas =
+            await resposta.json();
+
+        listaConversas.innerHTML = "";
+
+        conversas.forEach(function(conversa) {
+
+            criarBotaoConversa(conversa);
+
+        });
+
+    } catch (erro) {
+
+        console.log(
+            "Erro ao carregar conversas:",
+            erro
+        );
+
+    }
+
+}
+
+
+/* =========================
+   CRIAR ITEM DA CONVERSA
+========================= */
+
+function criarBotaoConversa(conversa) {
+
+    const container =
+        document.createElement("div");
+
+    container.className =
+        "conversa-container";
+
+
+    const botao =
+        document.createElement("button");
+
+    botao.className =
+        "conversa";
+
+
+    if (conversa.id === conversaAtual) {
+
+        botao.classList.add("ativa");
+
+    }
+
+
+    botao.innerHTML = `
+
+        <span>💬</span>
+
+        <span class="nome-conversa">
+            ${conversa.titulo}
+        </span>
+
+    `;
+
+
+    botao.addEventListener(
+        "click",
+        function() {
+
+            abrirConversa(
+                conversa.id
+            );
+
+        }
+    );
+
+
+    /* BOTÃO EXCLUIR */
+
+    const excluir =
+        document.createElement("button");
+
+    excluir.className =
+        "excluir-conversa";
+
+    excluir.innerHTML =
+        "🗑️";
+
+    excluir.title =
+        "Excluir conversa";
+
+
+    excluir.addEventListener(
+        "click",
+        function(evento) {
+
+            evento.stopPropagation();
+
+            excluirConversa(
+                conversa.id
+            );
+
+        }
+    );
+
+
+    container.appendChild(botao);
+
+    container.appendChild(excluir);
+
+    listaConversas.appendChild(container);
+
+}
+
+
+/* =========================
+   EXCLUIR CONVERSA
+========================= */
+
+async function excluirConversa(id) {
+
+    const confirmar =
+        confirm(
+            "Tem certeza que deseja excluir esta conversa?"
+        );
+
+
+    if (!confirmar) {
+
+        return;
+
+    }
+
+
+    try {
+
+        const resposta =
+            await fetch(
+                "/excluir_conversa/" + id,
+                {
+                    method: "DELETE"
+                }
+            );
+
+
+        const dados =
+            await resposta.json();
+
+
+        if (!dados.sucesso) {
+
+            alert(dados.mensagem);
+
+            return;
+
+        }
+
+
+        /* SE FOR A CONVERSA ATUAL */
+
+        if (id === conversaAtual) {
+
+            const respostaConversas =
+                await fetch("/conversas");
+
+            const conversas =
+                await respostaConversas.json();
+
+
+            if (conversas.length > 0) {
+
+                conversaAtual =
+                    conversas[0].id;
+
+                await abrirConversa(
+                    conversaAtual
+                );
+
+            }
+
+        }
+
+
+        carregarConversas();
+
+
+    } catch (erro) {
+
+        console.log(
+            "Erro ao excluir:",
+            erro
+        );
+
+    }
+
+}
+
+
+/* =========================
+   ABRIR CONVERSA
+========================= */
+
+async function abrirConversa(id) {
+
+    try {
+
+        const resposta =
+            await fetch(
+                "/conversa/" + id
+            );
+
+
+        const conversa =
+            await resposta.json();
+
+
+        conversaAtual =
+            conversa.id;
+
+
+        chat.innerHTML = "";
+
+
+        conversa.mensagens.forEach(
+            function(mensagem) {
+
+                adicionarMensagem(
+                    mensagem.texto,
+                    mensagem.tipo,
+                    false
+                );
+
+            }
+        );
+
+
+        carregarConversas();
+
+
+        chat.scrollTop =
+            chat.scrollHeight;
+
+
+    } catch (erro) {
+
+        console.log(
+            "Erro ao abrir conversa:",
+            erro
+        );
+
+    }
+
+}
+
+
+/* =========================
+   ADICIONAR MENSAGEM
+========================= */
+
+function adicionarMensagem(
+    texto,
+    tipo,
+    rolar = true
+) {
+
+    const mensagem =
+        document.createElement("div");
+
+
+    mensagem.classList.add(
+        "mensagem"
+    );
+
+
+    if (tipo === "usuario") {
+
+        mensagem.classList.add(
+            "mensagem-usuario"
+        );
+
+
+        mensagem.innerHTML = `
+
+            <div class="conteudo-mensagem">
+
+                <p>
+                    ${texto}
+                </p>
+
+            </div>
+
+        `;
+
+    } else {
+
+        mensagem.classList.add(
+            "mensagem-ia"
+        );
+
+
+        mensagem.innerHTML = `
+
+            <div class="avatar">
+                ✦
+            </div>
+
+            <div class="conteudo-mensagem">
+
+                <strong>
+                    NovaIA
+                </strong>
+
+                <p>
+                    ${texto.replace(
+                        /\n/g,
+                        "<br>"
+                    )}
+                </p>
+
+            </div>
+
+        `;
+
+    }
+
+
+    chat.appendChild(mensagem);
+
+
+    if (rolar) {
+
+        chat.scrollTop =
+            chat.scrollHeight;
+
+    }
+
+}
+
+
+/* =========================
+   ENVIAR MENSAGEM
+========================= */
+
+async function enviarMensagem() {
+
+    const texto =
+        input.value.trim();
+
+
+    if (!texto) {
+
+        return;
+
+    }
+
+
+    adicionarMensagem(
+        texto,
+        "usuario"
+    );
+
+
+    input.value = "";
+
+
+    digitando.style.display =
+        "flex";
+
+
+    chat.scrollTop =
+        chat.scrollHeight;
+
+
+    try {
+
+        const resposta =
+            await fetch(
+                "/chat",
+                {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+
+                        mensagem: texto,
+
+                        conversa_id:
+                            conversaAtual
+
+                    })
+
+                }
+            );
+
+
+        const dados =
+            await resposta.json();
+
+
+        setTimeout(function() {
+
+            digitando.style.display =
+                "none";
+
+
+            adicionarMensagem(
+                dados.resposta,
+                "ia"
+            );
+
+
+            carregarConversas();
+
+
+        }, 700);
+
+
+    } catch (erro) {
+
+        digitando.style.display =
+            "none";
+
+
+        adicionarMensagem(
+            "Ocorreu um erro ao conversar comigo. 😕",
+            "ia"
+        );
+
+    }
+
+}
+
+
+/* =========================
+   NOVA CONVERSA
+========================= */
+
+async function criarNovaConversa() {
+
+    try {
+
+        const resposta =
+            await fetch(
+                "/nova_conversa",
+                {
+                    method: "POST"
+                }
+            );
+
+
+        const conversa =
+            await resposta.json();
+
+
+        conversaAtual =
+            conversa.id;
+
+
+        chat.innerHTML = `
+
+            <div class="mensagem mensagem-ia">
+
+                <div class="avatar">
+                    ✦
+                </div>
+
+                <div class="conteudo-mensagem">
+
+                    <strong>
+                        NovaIA
+                    </strong>
+
+                    <p>
+                        Novo chat iniciado! 👋
+                    </p>
+
+                    <p>
+                        Como posso ajudar?
+                    </p>
+
+                </div>
+
+            </div>
+
+        `;
+
+
+        carregarConversas();
+
+
+        input.focus();
+
+
+    } catch (erro) {
+
+        console.log(
+            "Erro ao criar conversa:",
+            erro
+        );
+
+    }
+
+}
+
+
+/* =========================
+   BOTÃO NOVO CHAT
+========================= */
+
+novoChat.addEventListener(
+    "click",
+    criarNovaConversa
+);
+
+
+/* =========================
+   ENTER
+========================= */
+
+input.addEventListener(
+    "keydown",
+    function(evento) {
+
+        if (evento.key === "Enter") {
+
+            enviarMensagem();
+
+        }
+
+    }
+);
+
+
+/* =========================
+   BOTÃO ENVIAR
+========================= */
+
+botao.addEventListener(
+    "click",
+    enviarMensagem
+);
+
+
+/* =========================
+   INICIAR
+========================= */
+
+carregarConversas();
+
+abrirConversa(1);
+
+</script>
+
+</body>
+
+</html>
