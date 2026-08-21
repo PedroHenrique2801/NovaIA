@@ -1,0 +1,9 @@
+{
+    "nome": "Pedro",
+    "gosta": [
+        "futebol"
+    ],
+    "nao_gosta": [],
+    "assunto": null,
+    "idioma": "portugues"
+}
