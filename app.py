@@ -1081,29 +1081,28 @@ def resposta_conversa(texto):
 
     if "capital dos estados unidos" in texto:
 
-        return (
-            "A capital dos Estados Unidos é Washington, D.C.! 🇺🇸🏛️\n\n"
-            "Washington, D.C. é a capital federal dos Estados Unidos."
-        )
+        return "A capital dos Estados Unidos é Washington, D.C.! 🇺🇸🏛️\n\nWashington, D.C. é a capital federal dos Estados Unidos."
 
     if "capital do japao" in texto:
 
-        return (
-            "A capital do Japão é Tóquio! 🇯🇵🗼\n\n"
-            "Tóquio é uma das maiores e mais importantes cidades do Japão."
-        )
+        return "A capital do Japão é Tóquio! 🇯🇵🗼\n\nTóquio é uma das maiores e mais importantes cidades do Japão."
 
-    if "formula da agua" in texto:
+    if (
+        "formula da agua" in texto
+        or "formula quimica da agua" in texto
+    ):
 
         return (
             "A fórmula química da água é H₂O. 💧🧪\n\n"
-            "Isso significa que cada molécula de água possui "
-            "dois átomos de hidrogênio (H) e um átomo de oxigênio (O)."
+            "Isso significa que cada molécula de água "
+            "possui dois átomos de hidrogênio (H) e um "
+            "átomo de oxigênio (O)."
         )
 
     if (
         "quantos planetas existem" in texto
         or "quantos planetas tem" in texto
+        or "numero de planetas" in texto
     ):
 
         return (
@@ -1121,13 +1120,14 @@ def resposta_conversa(texto):
         )
 
     if (
-        "maior planeta" in texto
+        "maior planeta do sistema solar" in texto
         or "qual e o maior planeta" in texto
     ):
 
         return (
             "O maior planeta do Sistema Solar é Júpiter! 🪐\n\n"
-            "Júpiter é um gigante gasoso e é o maior dos oito planetas do Sistema Solar. 🌌"
+            "Júpiter é um gigante gasoso e é o maior dos "
+            "oito planetas do Sistema Solar. 🌌"
         )
 
     if "piada" in texto:
@@ -1299,14 +1299,14 @@ def gerar_resposta(mensagem):
         return resposta
 
     # -----------------------------------------------------
-    # CALCULADORA
+    # CALCULADORA CORRIGIDA
     # -----------------------------------------------------
 
     expressao = texto
 
     padroes_calculadora = [
-        "qual o resultado de",
         "qual e o resultado de",
+        "qual o resultado de",
         "resultado de",
         "quanto e",
         "calcule",
@@ -1314,34 +1314,19 @@ def gerar_resposta(mensagem):
     ]
 
     for padrao in padroes_calculadora:
-        expressao = expressao.replace(padrao, "")
 
-    expressao = expressao.strip()
+        if expressao.startswith(padrao):
 
-    # Remove palavras que podem aparecer junto da conta
-    expressao = re.sub(
-        r"\bquanto\b",
-        "",
-        expressao
-    )
+            expressao = expressao[
+                len(padrao):
+            ].strip()
 
-    expressao = re.sub(
-        r"\bresultado\b",
-        "",
-        expressao
-    )
+            break
 
-    expressao = expressao.strip()
-
-    # Procura uma expressão matemática dentro da mensagem
-    encontrado = re.search(
-        r"[-+]?\d+(?:[.,]\d+)?\s*(?:\+|-|\*|/|×|÷|\^)\s*[-+]?\d+(?:[.,]\d+)?",
-        expressao
-    )
-
-    if encontrado:
-
-        expressao = encontrado.group(0)
+    # Aceita perguntas como:
+    # quanto é 100 + 250
+    # calcule 25 + 37
+    # resultado de 50 * 2
 
     resultado = calcular(expressao)
 
@@ -1351,7 +1336,8 @@ def gerar_resposta(mensagem):
 
         return (
             "O resultado é "
-            f"{formatar_resultado(resultado)} 🧮"
+            + formatar_resultado(resultado)
+            + " 🧮"
         )
 
     # -----------------------------------------------------
